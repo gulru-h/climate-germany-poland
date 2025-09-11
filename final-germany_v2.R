@@ -387,6 +387,17 @@ micron <- aov(micronarratives ~ gr_a, data=mand)
 summary(micron)
 TukeyHSD(micron)
 
+#H2
+microlm<- lm(micronarratives~gr_a, data=onlymanipulation)
+summary(microlm)
+
+tab_model(microlm,
+          show.std = TRUE,     
+          show.se = TRUE,       
+          show.fstat = TRUE,
+          digits = 2,           
+          p.style = "numeric")
+
 
 #(exploratory) H3:The strength of the relationship between trust in 
 #institutions and perceived threat to security will vary by experimental group.
@@ -512,83 +523,8 @@ mand$heiz1[mand$heiz1==2 & mand[, c(40:44)] == 0]
 
 #with (numerical) dummy variable gr_1
 
-#base model without the needs 
-set.seed(545)
 
-n.model <- '
-  Mainstream=~narrative_2  +narrative_4  +narrative_6  +narrative_8  
-  Micronarratives=~narrative_1+narrative_3+narrative_5+ narrative_7 
-
-  Micronarratives ~ gr_1
-  Mainstream ~gr_1
-  Mainstream ~~ Micronarratives
-
-'
-
-n.fit <- sem(n.model, data = forsem, estimator = "ML")
-summary(n.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci= T)
-
-nfitestimates <- parameterestimates(n.fit)
-standardisednfit <- standardizedSolution(n.fit)
-nfitcovariancematrix <- data.frame(fitted(n.fit))
-nfitresiduals <- data.frame(resid(n.fit))
-fitnfit <- data.frame(fitMeasures(n.fit))
-
-library(openxlsx)
-nfitdatabases <- list("parameter estimates" = nfitestimates, 
-                      "standardised pe" = standardisednfit,
-                      "covariance matrix" = nfitcovariancematrix,
-                      "residuals" = nfitresiduals,
-                      "fit estimates" = fitnfit)
-
-write.xlsx(nfitdatabases, file = "nfit.xlsx", colNames = T, rowNames = T)
-
-
-#mediation model with the state need for security 
-
-med.model <- '
-  stateneedsecurity =~ ssec1+ssec2+ssec3
-  Mainstream=~narrative_2+narrative_4+narrative_6+narrative_8  
-  Micronarratives=~narrative_1+narrative_3+narrative_5+narrative_7 
-  traitneedsecurity=~ tsec1+tsec2+tsec3
-  finance =~finan1+finan2+finan3
-  
-  Micronarratives ~b1*stateneedsecurity+traitneedsecurity+gr_1+finance
-  Mainstream ~b2*stateneedsecurity+traitneedsecurity+gr_1+finance
-  stateneedsecurity ~ a1*gr_1+traitneedsecurity+finance
-  
-  Mainstream~~Micronarratives
-
-  ind1 := a1*b1
-  ind2 := a1*b2
-
-'
-
-med.fit <- sem(med.model, data = forsem, estimator = "ML", missing = "FIML"
-              # ,se = "bootstrap",bootstrap = 5000L, 
-              # parallel ="multicore", verbose= T
-               )
-summary(med.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
-
-
-medfitestimates <- parameterestimates(med.fit)
-standardisedmedfit <- standardizedSolution(med.fit)
-medfitcovariancematrix <- data.frame(fitted(med.fit))
-medfitresiduals <- data.frame(resid(med.fit))
-fitmedfit <- data.frame(fitMeasures(med.fit))
-
-library(openxlsx)
-medfitdatabases <- list("parameter estimates" = medfitestimates, 
-                        "standardised pe" = standardisedmedfit,
-                        "covariance matrix" = medfitcovariancematrix,
-                        "residuals" = medfitresiduals,
-                        "fit estimates" = fitmedfit)
-
-write.xlsx(medfitdatabases, file = "medfit.xlsx", colNames = T, rowNames = T)
-
-
-
-##mediation model, adding trust as a buffer 
+#mediated moderation
 #trust as a moderator
 
 tdmcforsem <- forsem
@@ -600,7 +536,7 @@ tdmcforsem <- indProd(tdmcforsem, var1= c("gr_1"),
                       match = FALSE , meanC = TRUE ,
                       residualC = FALSE , doubleMC = TRUE) 
 
-tmod.model <- '
+tmed.model <- '
   stateneedsecurity =~ ssec1+ssec2+ssec3
   Mainstream=~narrative_2+narrative_4  +narrative_6  +narrative_8  
   Micronarratives=~narrative_1+narrative_3+narrative_5+ narrative_7 
@@ -610,10 +546,11 @@ tmod.model <- '
   interaction =~gr_1.trust5
 
   stateneedsecurity ~ a_m3*gr_1+a_m2*trust+a_m1*interaction  +traitneedsecurity+finance
+
   Micronarratives ~bM1*stateneedsecurity+b1*gr_1+b2*trust+b3*interaction+traitneedsecurity+finance
+
   Mainstream ~bM2*stateneedsecurity+b4*gr_1+b5*trust+b6*interaction+traitneedsecurity+finance
-  trust ~ traitneedsecurity+finance
-  
+
   MedModmi_ab :=a_m1*bM1
   TotalModmi := MedModmi_ab+b3
   
@@ -624,11 +561,14 @@ tmod.model <- '
   ind2 := a_m3*bM2
 '
 
-tmod.fit <- sem(tmod.model, data = tdmcforsem, estimator = "ML",
+
+tmed.fit <- sem(tmed.model, data = tdmcforsem, estimator = "ML"
+                ,
                 missing = "FIML",se = "bootstrap",bootstrap = 5000L, 
                 parallel ="multicore", verbose= F
 )
-summary(tmod.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
+summary(tmed.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
+
 
 tmedfitestimates <- parameterestimates(tmed.fit)
 standardisedtmedfit <- standardizedSolution(tmed.fit)
@@ -664,14 +604,14 @@ amed.model <- '
   traitneedsecurity=~ tsec1+tsec2+tsec3
   interaction=~ ssec1.med_act +ssec2.med_act +ssec3.med_act 
   finance =~finan1+finan2+finan3
-
+  trust=~1*trust5
   
-  Micronarratives ~stateneedsecurity+traitneedsecurity+trust5+med_act+interaction+gr_1+finance
-  Mainstream ~stateneedsecurity+traitneedsecurity+trust5+med_act+interaction+gr_1+finance
+  Micronarratives ~stateneedsecurity+traitneedsecurity+trust+med_act+interaction+gr_1+finance
+  Mainstream ~stateneedsecurity+traitneedsecurity+trust+med_act+interaction+gr_1+finance
   med_act ~ traitneedsecurity+finance
 
-  stateneedsecurity ~ gr_1+traitneedsecurity+med_act+trust5+finance
-  trust5~traitneedsecurity+finance
+  stateneedsecurity ~ gr_1+traitneedsecurity+med_act+trust+finance
+  trust~traitneedsecurity+finance
       
   Micronarratives~~Mainstream
 '
@@ -694,78 +634,48 @@ amedfitdatabases <- list("parameter estimates" = amedfitestimates,
 
 write.xlsx(amedfitdatabases, file = "amedfit.xlsx", colNames = T, rowNames = T)
 
-vuongtest(n.fit,med.fit)
-vuongtest(med.fit,tmed.fit)
-vuongtest(tmed.fit,amed.fit)
+#trust and freedom
 
-#mediation model with state need for freedom 
+tdmcforsem <- forsem
 
-freed.model <- '
-  stateneedfreedom =~sfree1+sfree2+sfree3
-  Mainstream=~narrative_2  +narrative_4  +narrative_6  +narrative_8  
-  Micronarratives=~narrative_1+narrative_3+narrative_5+ narrative_7 
-  traitneedfreedom=~tfree1+ tfree2+ tfree3
-  finance =~finan1+finan2+finan3
+#double mean centering
+library(semTools)
+tdmcforsem <- indProd(ftdmcforsem, var1= c("gr_1"),
+                      var2=c("trust5"),
+                      match = FALSE , meanC = TRUE ,
+                      residualC = FALSE , doubleMC = TRUE) 
 
-  
-  Micronarratives ~b1*stateneedfreedom+gr_1+traitneedfreedom+finance
-  Mainstream ~b2*stateneedfreedom+gr_1+traitneedfreedom+finance
-  stateneedfreedom ~ a1*gr_1+traitneedfreedom+finance
-    
-  Micronarratives~~Mainstream
-
-  ind1 := a1*b1
-  ind2 := a1*b2
-
-
-'
-
-
-freed.fit <- sem(freed.model, data = forsem, estimator = "ML", missing = "FIML",
-                 se = "bootstrap",bootstrap = 5000L, 
-                 parallel ="multicore", verbose= T)
-summary(freed.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
-
-freedfitestimates <- parameterestimates(freed.fit)
-standardisedfreedfit <- standardizedSolution(freed.fit)
-freedfitcovariancematrix <- data.frame(fitted(freed.fit))
-freedfitresiduals <- data.frame(resid(freed.fit))
-fitfreedfit <- data.frame(fitMeasures(freed.fit))
-
-freedfitdatabases <- list("parameter estimates" = freedfitestimates, 
-                         "standardised pe" = standardisedfreedfit,
-                         "covariance matrix" = freedfitcovariancematrix,
-                         "residuals" = freedfitresiduals,
-                         "fit estimates" = fitfreedfit)
-
-write.xlsx(freedfitdatabases, file = "freedfit.xlsx", colNames = T, rowNames = T)
-
-
-#mediation model with need for freedom with trust as buffer 
 frtr.model <- '
-  needfreedom =~ sfree1+sfree2+sfree3
-  Mainstream =~ narrative_2+narrative_4+narrative_6+narrative_8  
-  Micronarratives =~ narrative_1+narrative_3+narrative_5+ narrative_7 
-  traitneedfreedom =~ tfree1+ tfree2+ tfree3
+  stateneedfreedom =~ sfree1+sfree2+sfree3
+  Mainstream=~narrative_2+narrative_4  +narrative_6  +narrative_8  
+  Micronarratives=~narrative_1+narrative_3+narrative_5+ narrative_7 
+  traitneedfreedom=~ tfree1+tfree2+tfree3
   finance =~finan1+finan2+finan3
+  trust =~1*trust5
+  interaction =~gr_1.trust5
 
-  Micronarratives ~b1*needfreedom+gr_1+trust5+traitneedfreedom+finance
-  Mainstream ~b2*needfreedom+gr_1+trust5+traitneedfreedom+finance
-  needfreedom ~ a2*gr_1+a1*trust5+traitneedfreedom+finance
-  trust5~traitneedfreedom+finance
+  stateneedfreedom ~ a_m3*gr_1+a_m2*trust+a_m1*interaction  +traitneedfreedom+finance
 
-  Micronarratives~~Mainstream
-      
-  ind1 := a1*b1
-  ind2 := a1*b2
-  ind3 := a2*b1
-  ind4 := a2*b2
+  Micronarratives ~bM1*stateneedfreedom+b1*gr_1+b2*trust+b3*interaction+traitneedfreedom+finance
+
+  Mainstream ~bM2*stateneedfreedom+b4*gr_1+b5*trust+b6*interaction+traitneedfreedom+finance
+
+  MedModmi_ab :=a_m1*bM1
+  TotalModmi := MedModmi_ab+b3
+  
+  MedModma_ab :=a_m1*bM2
+  TotalModma := MedModma_ab+b6
+
+  ind1 := a_m3*bM1
+  ind2 := a_m3*bM2
 
 '
 
-frtr.fit <- sem(frtr.model, data = forsem, estimator = "ML", missing = "FIML",
+frtr.fit <- sem(frtr.model, data = tdmcforsem, estimator = "ML", missing = "FIML"
+                ,
                 se = "bootstrap",bootstrap = 5000L, 
-                parallel ="multicore", verbose= T)
+                parallel ="multicore", verbose= T
+                )
 summary(frtr.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
 
 frtrfitestimates <- parameterestimates(frtr.fit)
@@ -800,13 +710,14 @@ framed.model <- '
   traitneedfreedom=~ tfree1+tfree2+tfree3
   interaction=~ sfree1.med_act +sfree2.med_act +sfree3.med_act 
   finance =~finan1+finan2+finan3
+  trust=~1*trust5
 
-  Micronarratives ~stateneedfreedom+traitneedfreedom+trust5+med_act+interaction+gr_1+finance
-  Mainstream ~stateneedfreedom+traitneedfreedom+trust5+med_act+interaction+gr_1+finance
+  Micronarratives ~stateneedfreedom+traitneedfreedom+trust+med_act+interaction+gr_1+finance
+  Mainstream ~stateneedfreedom+traitneedfreedom+trust+med_act+interaction+gr_1+finance
   med_act ~ traitneedfreedom+finance
 
-  stateneedfreedom ~ gr_1+traitneedfreedom+med_act+trust5+finance
-  trust5~ traitneedfreedom +finance 
+  stateneedfreedom ~ gr_1+traitneedfreedom+med_act+trust+finance
+  trust~ traitneedfreedom +finance 
   
   Micronarratives~~Mainstream
   
@@ -836,31 +747,48 @@ write.xlsx(framedfitdatabases, file = "framedfit.xlsx", colNames = T, rowNames =
 #you should now have 3 SEMs each for need for security and need for freedom 
 
 
-#with different groups (experimental vs. control)
 
+######with all three groups
+
+diffdmcforsem <- mand
+
+#double mean centering
+library(semTools)
+diffdmcforsem <- indProd(diffdmcforsem, var1= c("gr_3"),
+                      var2=c("trust5"),
+                      match = FALSE , meanC = TRUE ,
+                      residualC = FALSE , doubleMC = TRUE) 
 diffmed.model <- '
   stateneedsecurity =~ ssec1+ssec2+ssec3
   Mainstream=~narrative_2+narrative_4+narrative_6+narrative_8  
   Micronarratives=~narrative_1+narrative_3+narrative_5+narrative_7 
   traitneedsecurity=~ tsec1+tsec2+tsec3
   finance =~finan1+finan2+finan3
-  
-  Micronarratives ~b1*stateneedsecurity+traitneedsecurity+gr_3+finance
-  Mainstream ~b2*stateneedsecurity+traitneedsecurity+gr_3+finance
-  stateneedsecurity ~ a1*gr_3+traitneedsecurity+finance
-  
-  Mainstream~~Micronarratives
+  trust=~1*trust5
+  interaction =~gr_3.trust5
 
-  ind1 := a1*b1
-  ind2 := a1*b2
+
+  stateneedsecurity ~ a_m3*gr_3+a_m2*trust+a_m1*interaction  +traitneedsecurity+finance
+  Micronarratives ~bM1*stateneedsecurity+b1*gr_3+b2*trust+b3*interaction+traitneedsecurity+finance
+  Mainstream ~bM2*stateneedsecurity+b5*trust+b4*gr_3+b6*interaction+traitneedsecurity+finance
+  trust ~ traitneedsecurity+finance
+  
+  MedModmi_ab :=a_m1*bM1
+  TotalModmi := MedModmi_ab+b3
+  
+  MedModma_ab :=a_m1*bM2
+  TotalModma := MedModma_ab+b6
+
+  ind1 := a_m3*bM1
+  ind2 := a_m3*bM2
 
 '
 
-diffmed.fit <- sem(diffmed.model, data = mand, estimator = "ML", missing = "FIML",
-               se = "bootstrap",bootstrap = 5000L, 
-               parallel ="multicore", verbose= T)
+diffmed.fit <- sem(diffmed.model, data = diffdmcforsem, estimator = "ML", missing = "FIML"
+                   , se = "bootstrap",bootstrap = 5000L, 
+                    parallel ="multicore", verbose= T
+)
 summary(diffmed.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
-
 
 
 
@@ -882,46 +810,140 @@ write.xlsx(diffmedfitdatabases, file = "diffmedfit.xlsx", colNames = T, rowNames
 
 
 
-
-rsquareCalc(med.fit, "Micronarratives", "stateneedsecurity")
+rsquareCalc(tmed.fit, "Micronarratives", "trust")
 rsquareCalc(freed.fit,  "Micronarratives", "stateneedfreedom")
 
 
 
 
 
-
-tmed.model <- '
-  stateneedsecurity =~ ssec1+ssec2+ssec3
-  Mainstream=~narrative_2  +narrative_4  +narrative_6  +narrative_8  
-  Micronarratives=~narrative_1+narrative_3+narrative_5+ narrative_7 
-  traitneedsecurity=~ tsec1+tsec2+tsec3
-  finance =~finan1+finan2+finan3
-
-
-Micronarratives ~b1*stateneedsecurity+trust5+gr_1+traitneedsecurity+finance
-Mainstream ~b2*stateneedsecurity+trust5+gr_1+traitneedsecurity+finance
-stateneedsecurity ~ a1*gr_1+traitneedsecurity+a2*trust5+finance
-trust5 ~ traitneedsecurity+finance
-
-ind1 := a2*b1
-ind2 := a2*b2
-
-ind3 := a1*b1
-ind4 := a1*b2
-
-'
-
-
-tmed.fit <- sem(tmed.model, data = forsem, estimator = "ML",
-                missing = "FIML"
-                #,se = "bootstrap",bootstrap = 5000L, 
-                #parallel ="multicore", verbose= F
-)
-summary(tmed.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
-
-
-
-
-
+#taken from Hayes 
+rsquareCalc <- function (model, y, x, adj = FALSE, effN = FALSE, silent =
+                           FALSE) {
+  #model is a model fit by lavaan using e.g., the sem() or lavaan ()function.
+  #Y is a character vector of length 1 specifying the name of the (single) structural outcome of interest.
+  #x is a vector of one or more character strings specifying the name (s) of the target predictor(s) of interest, to be omitted from the reduced model.
+  #adj: do you want to calculate adjusted rather than unadjusted R2 and R2 change? Defaults to FALSE.
+  #effN: if TRUE, N in the adjusted R-square calculation is set to the lowest effective N in the structural regression. Defaults to FALSE.
+  #silent: if TRUE, output does not automatically print (but is returned as invisible). Defaults to FALSE.
+  #This argument is invoked when using rsquareCalc.Boot in order to turn off default printing while taking bootstrap resamples.
+  require ("lavaan")
+  if(!is.character (y) |length (y) != 1) stop("y must be a character vector
+of length 1, specifying the name of the DV in the (manifest or latent variable) regression of interest!")
+  #parameter estimates
+  pe <- parameterEstimates (model, standardized = TRUE, rsquare = TRUE)
+  #correlation matrix of all variables
+  Rmat <- lavInspect (model, what = "cor.all")
+  
+  #regression coefficients
+  Gamma <- pe[pe$lhs == y & pe$op == "~", ]
+  
+  #names of X variables NOT specified in x 
+  otherXnames <- Gamma [! (Gamma$rhs %in% x), "rhs"]
+  
+  #Grab correlation matrix of other Xs.
+  Rxx <- Rmat[otherXnames, otherXnames, drop = FALSE]
+  
+  #Inverse X cor mat.
+  RxxInv <- solve (Rxx)
+  #vector of xy correlations.
+  Rxy <- Rmat [otherXnames, y, drop = FALSE] 
+  #this way preserves the correct order of the other x names
+  #compute new gammas as they would have been without the variables in x included in the model.
+  #gamma = RxxInv%*Rxy
+  GammaNew <- RxxInv%*%Rxy
+  #R square of the submodel
+  RsqReduced <- t (GammaNew) %*%Rxy
+  #R square from Full model
+  RsqFull <- pe[pe$lhs == y & pe$op == "r2", "est"]
+  if (adj) {
+    #If adjusted R-square is requested
+    #Retrieve number of observations used in the analysis.
+    n <- lavInspect (model, what = "nobs")
+    #Number of predictors in the full model. 
+    pFull <- nrow (pe[pe$lhs == y & pe$op == "~",])
+    #Number of predictors contributing to increment in R-squared.
+    pInc <- length (x)
+    #Reducted model p = pFull - pInc.
+    pRed <- pFull - pInc
+    if (effN) {
+      #If effective N is requested, first check that the fmi is calculable.
+      #To do this, the following code borrows from lavaan'sinternal code.
+      ###Code taken from parameterEstimates () function:
+      PT <- parTable (model)
+      EM.cov <- lavInspect (model, "sampstat.h1")$cov
+      EM.mean <- lavInspect (model, "sampstat.h1")$mean 
+      this.options <- model@Options 
+      this.options$optim.method <- "none"
+      this.options$sample.cov.rescale <- FALSE
+      this.options$check.gradient <- FALSE
+      this.options
+      this.options$baseline <- FALSE
+      this.options$h1 <- FALSE 
+      this.options$test <- FALSE
+      fit.complete <- lavaan (model = PT, sample.cov = EM.cov,
+                              sample.mean = EM.mean, sample.nobs = n, slotOptions = this.options) 
+      ###
+      #Check that the complete model is identified:
+      if (any (eigen (lavInspect (fit.complete, what = "vcov") ) $values
+               <0)) {
+        #If the model used to estimate the fmi is non-identified, everything is NA.
+        res <- rep (NA, 2)
+        names (res)<- c (paste ("Rsquare Without ", paste0 (x,
+                                                            collapse = " "), collapse = ""), "RsquareChange")
+      }else{
+        #Otherwise, the calculations proceed
+        #peFMI = parameter estimates with fmi
+        peFMI <- parameterEstimates (model, standardized = TRUE,
+                                     rsquare = TRUE, fmi = TRUE)
+        #Flag regression relationships with proper dv: 
+        regressionflag <- peFMI$lhs == y & peFMI$op == "~"
+        #Flag the residual variance as well
+        residvarflag <- peFMI$lhs == y & peFMI$op == "~~" &peFMI$rhs == y
+        
+        #Subset the parameter estimates object to include all contributors to predicted and residual variance. 
+        peFMI_sub <- peFMI[regressionflag|residvarflag,]
+        #Retrieve max fmi from structural model.
+        fmi < peFMI_sub[which.max(peFMI_sub$fmi), "fmi"]
+        #Calculate the effective n
+        effN <- n* (1-fmi)
+        #Overwrite the original n for use in subsequent calculations.
+        n <- effN
+        #Adjusted R-square calculations.
+        multiplierFull <- (n-1) /(n - pFull - 1) 
+        multiplierRed <- (n-1) / (n - pRed - 1)
+        RsqReduced <- 1 - multiplierRed* (1 - RsqReduced)
+        RsqFull <- 1 - multiplierFull*(1 - RsqFull)
+        #R square change is difference between overall Rsquare and reduced R square.
+        RsgChange <- RsqFull - RsqReduced
+        res < - c(RsqReduced, RsqChange)
+        names (res) <- c(paste ("Rsquare Without ", paste0 (x,
+                                                            collapse = " "), collapse = ""),
+                         "RsquareChange")
+      }
+    }else{        
+      #If effN == FALSE, we proceed with the overall n.
+      #Adjusted R-square calculations.
+      multiplierFull <- (n-1)/(n - pFull - 1) 
+      multiplierRed <- (n-1) / (n - pRed - 1)
+      RsqReduced <- 1 - multiplierRed* (1 - RsqReduced)
+      RsqFull <- 1 - multiplierFull*(1 - RsqFull)
+      #R square change is difference between overall R square and reduced R square.
+      RsqChange <- RsqFull - RsqReduced
+      res <- c (RsqReduced, RsqChange)
+      names (res) <- c (paste ("Rsquare Without ", paste0 (x,
+                                                           collapse = " "), collapse = ""), "RsquareChange")
+    }
+  }else{
+    #Otherwise, simply calculate R-square change without the adjustment terms.
+    RsqChange <- RsqFull - RsqReduced
+    res <- c (RsqReduced, RsqChange)
+    names (res) <- c (paste("Rsquare Without ", paste0(x, collapse = "
+                "), collapse = ""),"RsquareChange")
+  }
+  #if silent printing is not requested, print the result.
+  if(!silent) print (round(res, 2))
+  #And return the object.
+  invisible (res)
+}                      
 

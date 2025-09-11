@@ -1,0 +1,27 @@
+{
+    "id": "FDC1D3E2",
+    "path": "~/Nextcloud/wp2_new/climate-germany/final-germany.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1162207051",
+    "contents": "",
+    "dirty": false,
+    "created": 1755699910037.0,
+    "source_on_save": false,
+    "relative_order": 20,
+    "properties": {
+        "tempName": "Untitled2",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "51,0",
+        "scrollLine": "25"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1756475150,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1756475150779,
+    "read_only": false,
+    "read_only_alternatives": []
+}

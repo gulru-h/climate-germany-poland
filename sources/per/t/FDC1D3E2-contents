@@ -564,10 +564,9 @@ med.model <- '
 
 '
 
-med.fit <- sem(med.model, data = forsem, estimator = "ML", missing = "FIML"
-              # ,se = "bootstrap",bootstrap = 5000L, 
-              # parallel ="multicore", verbose= T
-               )
+med.fit <- sem(med.model, data = forsem, estimator = "ML", missing = "FIML",
+               se = "bootstrap",bootstrap = 5000L, 
+               parallel ="multicore", verbose= T)
 summary(med.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
 
 
@@ -589,46 +588,33 @@ write.xlsx(medfitdatabases, file = "medfit.xlsx", colNames = T, rowNames = T)
 
 
 ##mediation model, adding trust as a buffer 
-#trust as a moderator
 
-tdmcforsem <- forsem
-
-#double mean centering
-library(semTools)
-tdmcforsem <- indProd(tdmcforsem, var1= c("gr_1"),
-                      var2=c("trust5"),
-                      match = FALSE , meanC = TRUE ,
-                      residualC = FALSE , doubleMC = TRUE) 
-
-tmod.model <- '
+tmed.model <- '
   stateneedsecurity =~ ssec1+ssec2+ssec3
-  Mainstream=~narrative_2+narrative_4  +narrative_6  +narrative_8  
+  Mainstream=~narrative_2  +narrative_4  +narrative_6  +narrative_8  
   Micronarratives=~narrative_1+narrative_3+narrative_5+ narrative_7 
   traitneedsecurity=~ tsec1+tsec2+tsec3
   finance =~finan1+finan2+finan3
-  trust =~1*trust5
-  interaction =~gr_1.trust5
 
-  stateneedsecurity ~ a_m3*gr_1+a_m2*trust+a_m1*interaction  +traitneedsecurity+finance
-  Micronarratives ~bM1*stateneedsecurity+b1*gr_1+b2*trust+b3*interaction+traitneedsecurity+finance
-  Mainstream ~bM2*stateneedsecurity+b4*gr_1+b5*trust+b6*interaction+traitneedsecurity+finance
-  trust ~ traitneedsecurity+finance
-  
-  MedModmi_ab :=a_m1*bM1
-  TotalModmi := MedModmi_ab+b3
-  
-  MedModma_ab :=a_m1*bM2
-  TotalModma := MedModma_ab+b6
 
-  ind1 := a_m3*bM1
-  ind2 := a_m3*bM2
+  Micronarratives ~b1*stateneedsecurity+trust5+gr_1+traitneedsecurity+finance
+  Mainstream ~b2*stateneedsecurity+trust5+gr_1+traitneedsecurity+finance
+  stateneedsecurity ~ a1*gr_1+traitneedsecurity+a2*trust5+finance
+  trust5 ~ traitneedsecurity+finance
+
+  ind1 := a2*b1
+  ind2 := a2*b2
+        
+  ind3 := a1*b1
+  ind4 := a1*b2
+
 '
 
-tmod.fit <- sem(tmod.model, data = tdmcforsem, estimator = "ML",
+
+tmed.fit <- sem(tmed.model, data = forsem, estimator = "ML",
                 missing = "FIML",se = "bootstrap",bootstrap = 5000L, 
-                parallel ="multicore", verbose= F
-)
-summary(tmod.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
+                parallel ="multicore", verbose= F)
+summary(tmed.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
 
 tmedfitestimates <- parameterestimates(tmed.fit)
 standardisedtmedfit <- standardizedSolution(tmed.fit)
@@ -676,7 +662,7 @@ amed.model <- '
   Micronarratives~~Mainstream
 '
 
-amed.fit <- sem(amed.model, data = dmcforsem, estimator = "ML")
+amed.fit <- sem(amed.model, data = dmcforsem, estimator = "MLM")
 summary(amed.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci =T)
 
 
@@ -694,9 +680,7 @@ amedfitdatabases <- list("parameter estimates" = amedfitestimates,
 
 write.xlsx(amedfitdatabases, file = "amedfit.xlsx", colNames = T, rowNames = T)
 
-vuongtest(n.fit,med.fit)
-vuongtest(med.fit,tmed.fit)
-vuongtest(tmed.fit,amed.fit)
+
 
 #mediation model with state need for freedom 
 
@@ -880,45 +864,6 @@ write.xlsx(diffmedfitdatabases, file = "diffmedfit.xlsx", colNames = T, rowNames
 
 
 
-
-
-
-rsquareCalc(med.fit, "Micronarratives", "stateneedsecurity")
-rsquareCalc(freed.fit,  "Micronarratives", "stateneedfreedom")
-
-
-
-
-
-
-tmed.model <- '
-  stateneedsecurity =~ ssec1+ssec2+ssec3
-  Mainstream=~narrative_2  +narrative_4  +narrative_6  +narrative_8  
-  Micronarratives=~narrative_1+narrative_3+narrative_5+ narrative_7 
-  traitneedsecurity=~ tsec1+tsec2+tsec3
-  finance =~finan1+finan2+finan3
-
-
-Micronarratives ~b1*stateneedsecurity+trust5+gr_1+traitneedsecurity+finance
-Mainstream ~b2*stateneedsecurity+trust5+gr_1+traitneedsecurity+finance
-stateneedsecurity ~ a1*gr_1+traitneedsecurity+a2*trust5+finance
-trust5 ~ traitneedsecurity+finance
-
-ind1 := a2*b1
-ind2 := a2*b2
-
-ind3 := a1*b1
-ind4 := a1*b2
-
-'
-
-
-tmed.fit <- sem(tmed.model, data = forsem, estimator = "ML",
-                missing = "FIML"
-                #,se = "bootstrap",bootstrap = 5000L, 
-                #parallel ="multicore", verbose= F
-)
-summary(tmed.fit, fit.measures=T, standardized = T, rsquare=TRUE, ci=T)
 
 
 
