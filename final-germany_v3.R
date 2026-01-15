@@ -7,7 +7,6 @@ gitcreds::gitcreds_set()
 usethis::use_github()
 usethis::gh_token_help()
 
-#"X:/LS-KESSELS/ALLGEMEIN/Gülru/digipatch/klima/klima"
 library(careless)
 library(ggplot2)
 library(car)
