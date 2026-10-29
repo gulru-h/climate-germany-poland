@@ -53,6 +53,7 @@ raw2 <- read.csv("raw.csv")
 raw <- raw2[, 2:146]
 
 clean <- raw
+write.csv(anon, "anon.csv", row.names = FALSE, fileEncoding = "UTF-8")
 
 table(clean$c_0001)
 #homeowner check 
@@ -94,6 +95,7 @@ clean <- clean[,-c(74:133)]
 clean <- clean[,-c(41,43,56,57)]
 clean <- clean[,-c(1:6)]
 table(clean$c_0001)
+write.csv(clean, "anon_de.csv", row.names = FALSE, fileEncoding = "UTF-8")
 
 #checking ranges
 

@@ -2,9 +2,4 @@
 .Rhistory
 .RData
 .Ruserdata
-*.csv
-*.sav
-*.RData
-*.rds
-*.xlsx
-!anon.csv
+
