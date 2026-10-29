@@ -5,9 +5,6 @@ Hello! Welcome to the GitHub page for Study 1.
 ### R-Project:
 1- klima_new.Rproj
 
-### Data files:
-1- anon_de.csv
-
 ### Script:
 1- final-germany-v4.R
 
