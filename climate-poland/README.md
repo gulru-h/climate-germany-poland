@@ -5,10 +5,6 @@ Hello! Welcome to the GitHub page for Study 2.
 ### R-Project:
 1- climate_pol.Rproj
 
-### Data files:
-1- corrected_data_preliminary_cleaned.csv   <br/>
-2- corrected_data_preliminary_cleaned.sav  <br/>
-
 ### Script:
 1- final-poland_v3.R
 
