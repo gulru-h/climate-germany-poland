@@ -20,9 +20,15 @@ library(effectsize)
 library(apaTables)
 
 
-aapl <- read_sav("climate-poland//corrected_dataset_preliminary_cleaned.sav")
-uncleaned <- read_sav("climate-poland//uncleaned.sav")
-rawpl <- read.csv("climate-poland//corrected_dataset_preliminary_cleaned.csv", sep = ";", dec = ".")
+aapl <- read_sav("corrected_dataset_preliminary_cleaned.sav")
+uncleaned <- read_sav("uncleaned.sav")
+rawpl <- read.csv("corrected_dataset_preliminary_cleaned.csv", sep = ";", dec = ".")
+
+#removed ip adresses of participants and user ids
+anon <- uncleaned[, -c(4, 179)]
+write.csv(anon, "anon.csv", row.names = FALSE, fileEncoding = "UTF-8")
+#keep in mind that this data file has 2 less columns so the subsetting actions
+#below might be referring to the wrong columns
 
 cleanpl <- rawpl[,c(23:214 )]
 uncleaned <- uncleaned[,c(23:210 )]
