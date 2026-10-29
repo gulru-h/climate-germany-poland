@@ -20,6 +20,13 @@ library(apaTables)
 
 aa <- read_sav("corrected_dataset_preliminary_cleaned.sav")
 raw <- read.csv("corrected_dataset_preliminary_cleaned.csv", sep = ";", dec = ".")
+uncleaned <- read_sav("uncleaned.sav")
+
+#removed ip adresses of participants and user ids
+anon <- uncleaned[, -c(4, 179)]
+write.csv(anon, "anon.csv", row.names = FALSE, fileEncoding = "UTF-8")
+#keep in mind that this data file has 2 less columns so the subsetting actions
+#below might be referring to the wrong columns
 
 clean <- raw[,c(23:214 )]
 names(clean)
