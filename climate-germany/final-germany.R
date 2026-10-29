@@ -261,7 +261,7 @@ clean1$gr_a[clean1$gr == 3] <- 3
 
 #gender
 table(mand$gender)
-#167 women 313 men
+#169 women 313 men
 
 #ses
 range(mand$SES, na.rm = T)
@@ -457,11 +457,11 @@ mand_com <- mand[complete.cases(mand[, c("sfree", "gr_a", "tsec", "ssec", "finan
 
 #SECURITY 
 
-n1 <- lm(ssec~ gr_a, data=mand)
+n1 <- lm(ssec~ gr_a+gender+age, data=mand)
 summary(n1)
 
 pw <- pairs(emmeans(n1, ~gr_a), adjust = "BH")
-summary(pw, infer = TRUE, adjust ="tukey")
+summary(pw, infer = TRUE)
 
 Anova(n1)
 effectsize(Anova(n1))
@@ -495,13 +495,13 @@ ggpredict(n6, terms = c("finan_s","gr_a")) |> plot()
 
 #FREEDOM
 
-n1fr <- lm(sfree~ gr_a, data=mand)
+n1fr <- lm(sfree~ gr_a+gender+age, data=mand)
 summary(n1fr)
 Anova(n1fr)
 effectsize(Anova(n1fr))
 
 pwfr <- pairs(emmeans(n1fr, ~gr_a), adjust = "BH")
-summary(pwfr, infer = TRUE, adjust ="tukey")
+summary(pwfr, infer = TRUE)
 
 
 n666fr <- lm(sfree~ gr_a*(ssec_s+finan_s)+mainstream_s+micronarratives_s+tfree_s+tsec_s+SES_s+gender+age, data=mand)
@@ -553,7 +553,7 @@ modelsummary(
 
 
 #### Predicting micronarratives with needs####
-m00<- lm(micronarratives~ gr_a,
+m00<- lm(micronarratives~ gr_a + gender + age,
            data=mand) 
 summary(m00)
 mic <- pairs(emmeans(m00, ~gr_a), adjust = "BH")
@@ -562,7 +562,7 @@ summary(mic, infer = TRUE, adjust ="tukey")
 
 Anova(m00)
 #1-2, 2-3 sign
-ma00<- lm(mainstream~ gr_a,
+ma00<- lm(mainstream~ gr_a+gender+age,
          data=mand) 
 summary(ma00)
 Anova(ma00)
